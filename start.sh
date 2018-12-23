@@ -17,28 +17,30 @@ if [[ ! -f /root/.get_iplayer/options ]]
 then
   echo No options file found, adding some nice defaults...
   /root/get_iplayer --prefs-add --whitespace
-  /root/get_iplayer --prefs-add --subs-embed
-  /root/get_iplayer --prefs-add --metadata
   /root/get_iplayer --prefs-add --nopurge
+  /root/get_iplayer --prefs-add --output="/root/output/"
   
   echo Removing non-standard download location from existing PVR files...
   # so downloads don't get saved in the container
   sed -i '/^output/d' /root/.get_iplayer/pvr/*
 fi
 
-# Force output location to a separate docker volume
-echo Forcing output location...
-/root/get_iplayer --prefs-add --output="/root/output/"
-
 if [[ -f /root/get_iplayer.cgi ]]
 then
+    echo "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" > /root/cron.tab && \
+    echo "@hourly /root/get_iplayer --refresh > /proc/1/fd/1 2>&1" >> /root/cron.tab && \
+    echo "@hourly /root/get_iplayer --pvr > /proc/1/fd/1 2>&1" >> /root/cron.tab && \
+    echo "@daily /root/update.sh > /proc/1/fd/1 2>&1" >> /root/cron.tab && \
+    crontab -u root /root/cron.tab && \
+    rm -f /root/cron.tab
+
   # Start cron
   service cron start
   
   # Keep restarting - for when the get_iplayer script is updated
   while true
   do
-    /usr/bin/perl /root/get_iplayer.cgi --port 8181 --getiplayer /root/get_iplayer
+    su - root -c "/usr/bin/perl /root/get_iplayer.cgi --port 8181 --getiplayer /root/get_iplayer"
   done 
 else
   echo err2 - Error occurred, pausing for 9999 seconds for investigation
