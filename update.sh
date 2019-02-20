@@ -49,7 +49,7 @@ then
     tar -xzf /root/latest.tar.gz get_iplayer-$RELEASE --directory /root/ --strip-components=1
     rm /root/latest.tar.gz
   fi
-  
+
   #kill current get_iplayer gracefully (is pvr/cache refresh running?)
   if [[ -f /root/.get_iplayer/pvr_lock ]] #|| [[ -f /root/.get_iplayer/??refreshcache_lock ]]
   then
